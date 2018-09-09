@@ -5,11 +5,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.Date;
 
 /**
- *
+ * 分页查询参数DTO
  */
-public class TeilPageQueryDTO extends PageQueryDTO {
+public class ModellPageQueryDTO extends PageQueryDTO {
 
-    private String number;
 
     private String name;
 
@@ -19,13 +18,6 @@ public class TeilPageQueryDTO extends PageQueryDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date toTime;
 
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
 
     public String getName() {
         return name;

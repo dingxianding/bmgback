@@ -1,5 +1,8 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -23,6 +26,8 @@ public class Aggregate implements Serializable {
 
     private String description;
 
+
+    @JsonIgnore
     @ManyToMany(mappedBy = "aggregates", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Teil> teils;
 

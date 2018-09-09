@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
@@ -124,12 +125,12 @@ public class Teil implements Serializable {
     /**
      * 更新时间
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
     private Date updateTime;
 
     /**
      * 删除时间，删除操作并不真实删除数据
      */
+    @JsonIgnore
     private Date deleteTime;
 
     public Integer getId() {

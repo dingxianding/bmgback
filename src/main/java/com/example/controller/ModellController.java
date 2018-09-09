@@ -1,7 +1,9 @@
 package com.example.controller;
 
 import com.example.dto.*;
-import com.example.entity.*;
+import com.example.entity.Aggregate;
+import com.example.entity.Modell;
+import com.example.entity.Teil;
 import com.example.exception.BaseException;
 import com.example.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,26 +20,16 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 零件
- * <p>
- * 三分钟彻底了解Restful最佳实践
- * https://blog.csdn.net/chenxiaochan/article/details/73716617
- *
- * @RequestParam @RequestBody @PathVariable 等参数绑定注解详解
- * https://blog.csdn.net/walkerJong/article/details/7946109
+ * 车型
  */
 @RestController
-@RequestMapping("teil")
-public class TeilController {
+@RequestMapping("modell")
+public class ModellController {
+    @Autowired
+    private ModellRepository repository;
 
     @Autowired
-    private TeilRepository repository;
-
-    @Autowired
-    private AbgasstufeRepository abgasstufeRepository;
-
-    @Autowired
-    private ModellRepository modellRepository;
+    private PlatformRepository platformRepository;
 
     @Autowired
     private AggregateRepository aggregateRepository;
@@ -45,13 +37,8 @@ public class TeilController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("")
-    public List<Teil> getAll() {
-        return repository.findAll();
-    }
-
     @GetMapping("/{id}")
-    public Teil get(@PathVariable int id) {
+    public Modell get(@PathVariable int id) {
         return repository.findByIdAndDeleteTime(id, null);
     }
 
@@ -62,15 +49,12 @@ public class TeilController {
      * @return
      */
     @GetMapping("pagedList")
-    public PageResultDTO pagedList(TeilPageQueryDTO params) {
+    public PageResultDTO pagedList(ModellPageQueryDTO params) {
 
         // 动态查询条件
-        Specification<Teil> spec = (root, query, cb) -> {
+        Specification<Modell> spec = (root, query, cb) -> {
             List<Predicate> predicate = new ArrayList<>();
 
-            if (params.getNumber() != null) {
-                predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
-            }
             if (params.getName() != null) {
                 predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
             }
@@ -99,7 +83,7 @@ public class TeilController {
             }
         }
         Pageable pageable = new PageRequest(params.getCurrentPage() - 1, params.getPageSize(), sort);
-        Page<Teil> pageResult = repository.findAll(spec, pageable);
+        Page<Modell> pageResult = repository.findAll(spec, pageable);
 
         PageResultDTO pageResultDTO = new PageResultDTO();
         pageResultDTO.setList(pageResult.getContent());
@@ -121,36 +105,32 @@ public class TeilController {
      * @return
      */
     @PostMapping("")
-    public Teil save(@RequestBody TeilAddDTO addDTO) {
-        //TODO 权限控制
-
-        Teil entity = new Teil();
-        entity.setNumber(addDTO.getNumber());
+    public Modell save(@RequestBody ModellAddUpdateDTO addDTO) {
+        Modell entity = new Modell();
         entity.setName(addDTO.getName());
-        entity.setLieferant(addDTO.getLieferant());
-        entity.setBezugsart(addDTO.getBezugsart());
 
-        entity.setAbgasstufe(abgasstufeRepository.findByName(addDTO.getAbgasstufe()));
-        entity.setErstModell(modellRepository.findModellByName(addDTO.getErstModell()));
-        entity.setErstAggregate(aggregateRepository.findByName(addDTO.getErstAggregate()));
-
-        List<Modell> modells = new ArrayList<Modell>();
-        for (String i : addDTO.getModells()) {
-            modells.add(modellRepository.findModellByName(i));
-        }
-        entity.setModells(modells);
-
+        entity.setPlatform(platformRepository.findByName(addDTO.getPlatform()));
         List<Aggregate> aggregates = new ArrayList<Aggregate>();
         for (String i : addDTO.getAggregates()) {
             aggregates.add(aggregateRepository.findByName(i));
         }
-
         entity.setAggregates(aggregates);
+
+        entity.setVffTime(addDTO.getVffTime());
+        entity.setPvsTime(addDTO.getPvsTime());
+        entity.setOsTbtTime(addDTO.getOsTbtTime());
+        entity.setOsTime(addDTO.getOsTime());
+        entity.setSopTbtTime(addDTO.getSopTbtTime());
+        entity.setSopTime(addDTO.getSopTime());
+        entity.setRunCount(addDTO.getRunCount());
+        entity.setRunPlan(addDTO.getRunPlan());
+        entity.setDescription(addDTO.getDescription());
+
         //TODO 用户管理完善
         entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
-        entity.setFop(userRepository.findByIdAndDeleteTime(1, null));
 
         entity.setInTime(new Date());
+
         return repository.save(entity);
     }
 
@@ -165,9 +145,9 @@ public class TeilController {
         //TODO 权限控制
 
         //输入验证
-        Teil entity = repository.findByIdAndDeleteTime(id, null);
+        Modell entity = repository.findByIdAndDeleteTime(id, null);
         if (entity == null) {
-            throw new BaseException("要删除的零件不存在");
+            throw new BaseException("要删除的车型不存在");
         }
 
         repository.deleteById(id);
@@ -180,36 +160,33 @@ public class TeilController {
      * @return
      */
     @PutMapping("")
-    public Teil update(@RequestBody TeilUpdateDTO updateDTO) {
-        //TODO 权限控制
-
+    public Modell update(@RequestBody ModellAddUpdateDTO updateDTO) {
         //输入验证
-        Teil entity = repository.findByIdAndDeleteTime(updateDTO.getId(), null);
+        Modell entity = repository.findByIdAndDeleteTime(updateDTO.getId(), null);
         if (entity == null) {
-            throw new BaseException("要更新的零件不存在");
+            throw new BaseException("要更新的车型不存在");
         }
 
-        entity.setNumber(updateDTO.getNumber());
         entity.setName(updateDTO.getName());
-        entity.setLieferant(updateDTO.getLieferant());
-        entity.setBezugsart(updateDTO.getBezugsart());
 
-        entity.setAbgasstufe(abgasstufeRepository.findByName(updateDTO.getAbgasstufe()));
-        entity.setErstModell(modellRepository.findModellByName(updateDTO.getErstModell()));
-        entity.setErstAggregate(aggregateRepository.findByName(updateDTO.getErstAggregate()));
-
-        List<Modell> modells = new ArrayList<Modell>();
-        for (String i : updateDTO.getModells()) {
-            modells.add(modellRepository.findModellByName(i));
-        }
-        entity.setModells(modells);
+        entity.setPlatform(platformRepository.findByName(updateDTO.getPlatform()));
 
         List<Aggregate> aggregates = new ArrayList<Aggregate>();
         for (String i : updateDTO.getAggregates()) {
             aggregates.add(aggregateRepository.findByName(i));
         }
-
         entity.setAggregates(aggregates);
+
+        entity.setVffTime(updateDTO.getVffTime());
+        entity.setPvsTime(updateDTO.getPvsTime());
+        entity.setOsTbtTime(updateDTO.getOsTbtTime());
+        entity.setOsTime(updateDTO.getOsTime());
+        entity.setSopTbtTime(updateDTO.getSopTbtTime());
+        entity.setSopTime(updateDTO.getSopTime());
+        entity.setRunCount(updateDTO.getRunCount());
+        entity.setRunPlan(updateDTO.getRunPlan());
+        entity.setDescription(updateDTO.getDescription());
+
         entity.setUpdateTime(new Date());
 
         return repository.save(entity);
@@ -223,18 +200,17 @@ public class TeilController {
      * @return
      */
     @GetMapping("init")
-    public TeilInitDataDTO init(TeilPageQueryDTO params) {
-        TeilInitDataDTO teilInitDataDTO = new TeilInitDataDTO();
+    public ModelllInitDataDTO init(ModellPageQueryDTO params) {
+        ModelllInitDataDTO result = new ModelllInitDataDTO();
         //排放阶段、车型、动力总成
-        teilInitDataDTO.setAbgasstufeList(abgasstufeRepository.findAll());
-        teilInitDataDTO.setModellList(modellRepository.findAll());
-        teilInitDataDTO.setAggregateList(aggregateRepository.findAll());
+        result.setPlatformList(platformRepository.findAll());
+        result.setAggregateList(aggregateRepository.findAll());
         //分页数据
         PageResultDTO pageResultDTO = new PageResultDTO();
         pageResultDTO = pagedList(params);
-        teilInitDataDTO.setList(pageResultDTO.getList());
-        teilInitDataDTO.setPagination(pageResultDTO.getPagination());
-        return teilInitDataDTO;
+        result.setList(pageResultDTO.getList());
+        result.setPagination(pageResultDTO.getPagination());
+        return result;
     }
 
 

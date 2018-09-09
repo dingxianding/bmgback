@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 分页查询参数DTO
+ *
  */
 public class TeilAddDTO {
 

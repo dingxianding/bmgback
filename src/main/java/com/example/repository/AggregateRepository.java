@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface AggregateRepository extends JpaRepository<Aggregate, Integer>, JpaSpecificationExecutor<Aggregate> {
 
-    Aggregate findAggregateByName(String name);
+    Aggregate findByName(String name);
 }

@@ -12,7 +12,7 @@ import java.util.List;
  * 零件List界面的初始化数据
  * 在初始化的时候从数据库读取
  */
-public class TeilInitDataDTO {
+public class TeilInitDataDTO extends PageResultDTO {
 
     /**
      * 排放阶段
@@ -28,26 +28,6 @@ public class TeilInitDataDTO {
      * 动力总成
      */
     private List<Aggregate> aggregateList;
-
-    private List<?> list;
-
-    private Pagination pagination;
-
-    public List<?> getList() {
-        return list;
-    }
-
-    public void setList(List<?> list) {
-        this.list = list;
-    }
-
-    public Pagination getPagination() {
-        return pagination;
-    }
-
-    public void setPagination(Pagination pagination) {
-        this.pagination = pagination;
-    }
 
     public List<Abgasstufe> getAbgasstufeList() {
         return abgasstufeList;

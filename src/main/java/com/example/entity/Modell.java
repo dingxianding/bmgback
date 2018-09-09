@@ -1,5 +1,8 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -28,9 +31,17 @@ public class Modell implements Serializable {
     private Platform platform;
 
     //动力总成类型
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "aggregate_id", foreignKey = @ForeignKey(name = "fk_modell_aggregate"))
-    private Aggregate aggregate;
+//    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+//    @JoinColumn(name = "aggregate_id", foreignKey = @ForeignKey(name = "fk_modell_aggregate"))
+//    private Aggregate aggregate;
+
+    //动力总成类型
+    @JsonIgnoreProperties(value = {"teils"})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "tb_modell_aggregate", joinColumns = {
+            @JoinColumn(name = "modell_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "aggregate_id", referencedColumnName = "id")})
+    private List<Aggregate> aggregates = new ArrayList<Aggregate>();
 
     //VFF时间
     private Date vffTime;
@@ -58,6 +69,7 @@ public class Modell implements Serializable {
 
     private String description;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "modells", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Teil> teils = new ArrayList<Teil>();
 
@@ -80,12 +92,12 @@ public class Modell implements Serializable {
     /**
      * 更新时间
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
     private Date updateTime;
 
     /**
      * 删除时间，删除操作并不真实删除数据
      */
+    @JsonIgnore
     private Date deleteTime;
 
     public Integer getId() {
@@ -112,12 +124,12 @@ public class Modell implements Serializable {
         this.platform = platform;
     }
 
-    public Aggregate getAggregate() {
-        return aggregate;
+    public List<Aggregate> getAggregates() {
+        return aggregates;
     }
 
-    public void setAggregate(Aggregate aggregate) {
-        this.aggregate = aggregate;
+    public void setAggregates(List<Aggregate> aggregates) {
+        this.aggregates = aggregates;
     }
 
     public Date getVffTime() {

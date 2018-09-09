@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 分页查询参数DTO
+ *
  */
 public class TeilUpdateDTO {
 

@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  * 排放阶段Repository类
  */
 public interface AbgasstufeRepository extends JpaRepository<Abgasstufe, Integer>, JpaSpecificationExecutor<Abgasstufe> {
-    Abgasstufe findAbgasstufeByName(String name);
+    Abgasstufe findByName(String name);
 }
