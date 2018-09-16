@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,6 +58,18 @@ public class ModellController {
 
             if (params.getName() != null) {
                 predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+            }
+            if (params.getPlatform() != null) {
+                predicate.add(cb.equal(root.get("platform"), platformRepository.findByName(params.getPlatform())));
+            }
+            if (params.getAggregates().size() > 0) {
+                //TODO 关联查询，直接查询会出错
+//                List<Aggregate> aggregates = new ArrayList<Aggregate>();
+//                for (String i : params.getAggregates()) {
+//                    aggregates.add(aggregateRepository.findByName(i));
+//                }
+//                Expression<String> exp = root.get("aggregates");
+//                predicate.add(exp.in(aggregates));
             }
             predicate.add(cb.isNull(root.get("deleteTime")));
 
