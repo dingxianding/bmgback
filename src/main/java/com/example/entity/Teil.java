@@ -125,6 +125,7 @@ public class Teil implements Serializable {
     /**
      * 更新时间
      */
+    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
     private Date updateTime;
 
     /**

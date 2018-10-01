@@ -1,29 +1,17 @@
-package com.example.entity;
+package com.example.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.example.entity.Teil;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
- * 零件的进度信息
+ *
  */
-@Entity
-@Table(name = "tb_teil_scheduel")
-public class TeilSchedule implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue
-    private Integer id; //主键 自增
-
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "teil_id", foreignKey = @ForeignKey(name = "fk_teil_scheduel_teil"), nullable = false, unique = true)
-    private Teil teil;
+public class TeilScheduleAddUpdateDTO {
+    private Integer id;
+    private String teil;
 
     //询价资料时间
     private Date anfragedatenTime;
@@ -77,33 +65,7 @@ public class TeilSchedule implements Serializable {
     /**
      * 录入人员
      */
-    @NotNull
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "in_user", foreignKey = @ForeignKey(name = "fk_teil_scheduel_in_user"), nullable = false)
-    private User inUser;
-
-    /**
-     * 录入时间
-     * 时间必须在程序里写，不能默认生成
-     * 因为如果是非空的话就会因为是Null无法插入，如果可为空的话就会是null，时间只能自己写
-     */
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Date inTime;
-
-    /**
-     * 更新时间
-     */
-    @CreationTimestamp
-    @Column(nullable = false)
-    private Date updateTime;
-
-    /**
-     * 删除时间，删除操作并不真实删除数据
-     */
-    @JsonIgnore
-    @Column(insertable = false)
-    private Date deleteTime;
+    private Integer inUser;
 
     public Integer getId() {
         return id;
@@ -113,11 +75,11 @@ public class TeilSchedule implements Serializable {
         this.id = id;
     }
 
-    public Teil getTeil() {
+    public String getTeil() {
         return teil;
     }
 
-    public void setTeil(Teil teil) {
+    public void setTeil(String teil) {
         this.teil = teil;
     }
 
@@ -313,35 +275,11 @@ public class TeilSchedule implements Serializable {
         this.ifCop = ifCop;
     }
 
-    public User getInUser() {
+    public Integer getInUser() {
         return inUser;
     }
 
-    public void setInUser(User inUser) {
+    public void setInUser(Integer inUser) {
         this.inUser = inUser;
-    }
-
-    public Date getInTime() {
-        return inTime;
-    }
-
-    public void setInTime(Date inTime) {
-        this.inTime = inTime;
-    }
-
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Date getDeleteTime() {
-        return deleteTime;
-    }
-
-    public void setDeleteTime(Date deleteTime) {
-        this.deleteTime = deleteTime;
     }
 }

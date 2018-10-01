@@ -141,9 +141,8 @@ public class ModellController {
 
         //TODO 用户管理完善
         entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
-
         entity.setInTime(new Date());
-
+        entity.setUpdateTime(new Date());
         return repository.save(entity);
     }
 

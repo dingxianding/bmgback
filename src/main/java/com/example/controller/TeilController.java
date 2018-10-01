@@ -151,6 +151,7 @@ public class TeilController {
         entity.setFop(userRepository.findByIdAndDeleteTime(1, null));
 
         entity.setInTime(new Date());
+        entity.setUpdateTime(new Date());
         return repository.save(entity);
     }
 
