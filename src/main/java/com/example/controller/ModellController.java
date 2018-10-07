@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.dto.*;
 import com.example.entity.Aggregate;
+import com.example.entity.FileEntity;
 import com.example.entity.Modell;
 import com.example.entity.Teil;
 import com.example.exception.BaseException;
@@ -38,6 +39,9 @@ public class ModellController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private FileRepository fileRepository;
+
     @GetMapping("/{id}")
     public Modell get(@PathVariable int id) {
         return repository.findByIdAndDeleteTime(id, null);
@@ -57,7 +61,7 @@ public class ModellController {
             List<Predicate> predicate = new ArrayList<>();
 
             if (params.getName() != null) {
-                predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
             }
             if (params.getPlatform() != null) {
                 predicate.add(cb.equal(root.get("platform"), platformRepository.findByName(params.getPlatform())));
@@ -136,13 +140,20 @@ public class ModellController {
         entity.setSopTbtTime(addDTO.getSopTbtTime());
         entity.setSopTime(addDTO.getSopTime());
         entity.setRunCount(addDTO.getRunCount());
-        entity.setRunPlan(addDTO.getRunPlan());
         entity.setDescription(addDTO.getDescription());
+
+        //跑车计划，文件
+        List<FileEntity> fileEntitieList = new ArrayList<>();
+        if (addDTO.getRunPlan() != null && addDTO.getRunPlan().size() > 0) {
+            for (Integer i : addDTO.getRunPlan()) {
+                fileEntitieList.add(fileRepository.findByIdAndDeleteTime(i, null));
+            }
+        }
+        //是空的要置空
+        entity.setRunPlan(fileEntitieList);
 
         //TODO 用户管理完善
         entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
-        entity.setInTime(new Date());
-        entity.setUpdateTime(new Date());
         return repository.save(entity);
     }
 
@@ -196,8 +207,17 @@ public class ModellController {
         entity.setSopTbtTime(updateDTO.getSopTbtTime());
         entity.setSopTime(updateDTO.getSopTime());
         entity.setRunCount(updateDTO.getRunCount());
-        entity.setRunPlan(updateDTO.getRunPlan());
         entity.setDescription(updateDTO.getDescription());
+
+        //跑车计划，文件
+        List<FileEntity> fileEntitieList = new ArrayList<>();
+        if (updateDTO.getRunPlan() != null && updateDTO.getRunPlan().size() > 0) {
+            for (Integer i : updateDTO.getRunPlan()) {
+                fileEntitieList.add(fileRepository.findByIdAndDeleteTime(i, null));
+            }
+        }
+        //是空的要置空
+        entity.setRunPlan(fileEntitieList);
 
         entity.setUpdateTime(new Date());
 

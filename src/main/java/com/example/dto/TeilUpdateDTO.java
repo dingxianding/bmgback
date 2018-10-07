@@ -21,6 +21,11 @@ public class TeilUpdateDTO {
     private String name;
 
     /**
+     * 零件状态
+     */
+    private Integer status;
+
+    /**
      * 供应商
      */
     private String lieferant;
@@ -50,12 +55,10 @@ public class TeilUpdateDTO {
      */
     private List<String> modells = new ArrayList<String>();
 
-
     /**
      * 一个零件可以属于多种动力总成
      */
     private List<String> aggregates = new ArrayList<String>();
-
 
     /**
      * 录入人员
@@ -84,6 +87,14 @@ public class TeilUpdateDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 
     public String getLieferant() {

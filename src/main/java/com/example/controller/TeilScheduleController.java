@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dto.*;
 import com.example.entity.Aggregate;
 import com.example.entity.Modell;
+import com.example.entity.Teil;
 import com.example.entity.TeilSchedule;
 import com.example.exception.BaseException;
 import com.example.repository.*;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,10 +71,14 @@ public class TeilScheduleController {
             List<Predicate> predicate = new ArrayList<>();
 
             if (params.getNumber() != null) {
-                predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
+                predicate.add(cb.like(cb.lower(join.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                //predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
             }
             if (params.getName() != null) {
-                predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+                Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
+                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getName().toLowerCase() + "%"));
+                //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
             }
             predicate.add(cb.isNull(root.get("deleteTime")));
 
@@ -234,7 +241,7 @@ public class TeilScheduleController {
     public TeilScheduleInitDataDTO init(TeilSchedulePageQueryDTO params) {
         TeilScheduleInitDataDTO initDataDTO = new TeilScheduleInitDataDTO();
         //零件
-        //TODO 应该只能获取自己的
+        //TODO 应该只能获取自己的，未添加过信息的
         initDataDTO.setTeilList(teilRepository.findAll());
         //分页数据
         PageResultDTO pageResultDTO = new PageResultDTO();

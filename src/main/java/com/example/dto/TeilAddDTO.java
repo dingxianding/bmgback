@@ -22,6 +22,12 @@ public class TeilAddDTO {
     private String name;
 
     /**
+     * 零件状态
+     */
+    private Integer status;
+
+
+    /**
      * 供应商
      */
     private String lieferant;
@@ -56,7 +62,6 @@ public class TeilAddDTO {
      * 一个零件可以属于多种动力总成
      */
     private List<String> aggregates = new ArrayList<String>();
-
 
     /**
      * 录入人员
@@ -133,6 +138,14 @@ public class TeilAddDTO {
 
     public void setAggregates(List<String> aggregates) {
         this.aggregates = aggregates;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 
     public Integer getInUser() {

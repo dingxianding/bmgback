@@ -84,8 +84,6 @@ public class TeilSchedule implements Serializable {
 
     /**
      * 录入时间
-     * 时间必须在程序里写，不能默认生成
-     * 因为如果是非空的话就会因为是Null无法插入，如果可为空的话就会是null，时间只能自己写
      */
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

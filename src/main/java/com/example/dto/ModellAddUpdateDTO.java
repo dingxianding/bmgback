@@ -1,11 +1,5 @@
 package com.example.dto;
 
-import com.example.entity.Aggregate;
-import com.example.entity.Platform;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,10 +40,10 @@ public class ModellAddUpdateDTO {
     //跑车数量（SWP/SVP/SPH/4KZ）
     private Integer runCount;
 
-    //跑车计划
-    private String runPlan;
-
     private String description;
+
+    //跑车计划
+    private List<Integer> runPlan = new ArrayList<Integer>();
 
     public Integer getId() {
         return id;
@@ -139,19 +133,19 @@ public class ModellAddUpdateDTO {
         this.runCount = runCount;
     }
 
-    public String getRunPlan() {
-        return runPlan;
-    }
-
-    public void setRunPlan(String runPlan) {
-        this.runPlan = runPlan;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<Integer> getRunPlan() {
+        return runPlan;
+    }
+
+    public void setRunPlan(List<Integer> runPlan) {
+        this.runPlan = runPlan;
     }
 }

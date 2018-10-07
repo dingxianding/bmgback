@@ -1,10 +1,6 @@
 package com.example.dto;
 
-import com.example.entity.Teil;
-
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  *

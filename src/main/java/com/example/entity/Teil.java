@@ -2,6 +2,7 @@ package com.example.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -40,6 +41,11 @@ public class Teil implements Serializable {
      */
     @NotNull
     private String name;
+
+    /**
+     * 零件状态
+     */
+    private Integer status;
 
     /**
      * 供应商
@@ -116,22 +122,25 @@ public class Teil implements Serializable {
 
     /**
      * 录入时间
-     * 时间必须在程序里写，不能默认生成
+     * 时间必须在程序里写，不能默认生成（用了CreationTimestamp，就不需要程序里写了）
      * 因为如果是非空的话就会因为是Null无法插入，如果可为空的话就会是null，时间只能自己写
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private Date inTime;
 
     /**
      * 更新时间
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false)
     private Date updateTime;
 
     /**
      * 删除时间，删除操作并不真实删除数据
      */
     @JsonIgnore
+    @Column(insertable = false)
     private Date deleteTime;
 
     public Integer getId() {
@@ -212,6 +221,14 @@ public class Teil implements Serializable {
 
     public void setAggregates(List<Aggregate> aggregates) {
         this.aggregates = aggregates;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 
     public User getFop() {

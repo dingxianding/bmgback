@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,10 +71,29 @@ public class TeilController {
             List<Predicate> predicate = new ArrayList<>();
 
             if (params.getNumber() != null) {
-                predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                predicate.add(cb.like(cb.lower(root.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
             }
             if (params.getName() != null) {
-                predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
+            }
+            if (params.getStatus() != null) {
+                predicate.add(cb.equal(root.get("status"), params.getStatus()));
+            }
+            //适用车型
+            if (params.getModell() != null) {
+                Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("name"), params.getModell()));
+            }
+            //适用动力总成
+            if (params.getAggregate() != null) {
+                Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("name"), params.getAggregate()));
+            }
+            //fop
+            //TODO 人员实体修改后可能要修改
+            if (params.getFop() != null) {
+                Join<Aggregate, Teil> join = root.join("fop", JoinType.LEFT);
+                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
             }
             predicate.add(cb.isNull(root.get("deleteTime")));
 
@@ -127,6 +148,7 @@ public class TeilController {
         Teil entity = new Teil();
         entity.setNumber(addDTO.getNumber());
         entity.setName(addDTO.getName());
+        entity.setStatus(addDTO.getStatus());
         entity.setLieferant(addDTO.getLieferant());
         entity.setBezugsart(addDTO.getBezugsart());
 
@@ -150,8 +172,6 @@ public class TeilController {
         entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
         entity.setFop(userRepository.findByIdAndDeleteTime(1, null));
 
-        entity.setInTime(new Date());
-        entity.setUpdateTime(new Date());
         return repository.save(entity);
     }
 
@@ -192,6 +212,7 @@ public class TeilController {
 
         entity.setNumber(updateDTO.getNumber());
         entity.setName(updateDTO.getName());
+        entity.setStatus(updateDTO.getStatus());
         entity.setLieferant(updateDTO.getLieferant());
         entity.setBezugsart(updateDTO.getBezugsart());
 

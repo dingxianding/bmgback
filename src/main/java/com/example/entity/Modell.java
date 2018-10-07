@@ -2,6 +2,7 @@ package com.example.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -64,14 +65,18 @@ public class Modell implements Serializable {
     //跑车数量（SWP/SVP/SPH/4KZ）
     private Integer runCount;
 
-    //跑车计划
-    private String runPlan;
-
     private String description;
 
     @JsonIgnore
     @ManyToMany(mappedBy = "modells", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Teil> teils = new ArrayList<Teil>();
+
+    //跑车计划，文件
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "tb_modell_file", joinColumns = {
+            @JoinColumn(name = "modell_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "file_id", referencedColumnName = "id")})
+    private List<FileEntity> runPlan = new ArrayList<FileEntity>();
 
     /**
      * 录入人员
@@ -83,21 +88,23 @@ public class Modell implements Serializable {
 
     /**
      * 录入时间
-     * 时间必须在程序里写，不能默认生成
-     * 因为如果是非空的话就会因为是Null无法插入，如果可为空的话就会是null，时间只能自己写
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private Date inTime;
 
     /**
      * 更新时间
      */
+    @CreationTimestamp
+    @Column(nullable = false)
     private Date updateTime;
 
     /**
      * 删除时间，删除操作并不真实删除数据
      */
     @JsonIgnore
+    @Column(insertable = false)
     private Date deleteTime;
 
     public Integer getId() {
@@ -188,14 +195,6 @@ public class Modell implements Serializable {
         this.runCount = runCount;
     }
 
-    public String getRunPlan() {
-        return runPlan;
-    }
-
-    public void setRunPlan(String runPlan) {
-        this.runPlan = runPlan;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -210,6 +209,18 @@ public class Modell implements Serializable {
 
     public void setTeils(List<Teil> teils) {
         this.teils = teils;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public List<FileEntity> getRunPlan() {
+        return runPlan;
+    }
+
+    public void setRunPlan(List<FileEntity> runPlan) {
+        this.runPlan = runPlan;
     }
 
     public User getInUser() {
