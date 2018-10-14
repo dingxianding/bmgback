@@ -9,7 +9,7 @@ package com.example.constant;
 public class ConstantKey {
 
     /**
-     * jwt签名key
+     * 签名key
      */
-    public static final String SIGNING_KEY = "bgmJWT2018";
+    public static final String SIGNING_KEY = "spring-security-@Jwt!&Secret^#";
 }

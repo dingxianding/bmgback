@@ -3,10 +3,9 @@ package com.example.service;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
- * 描述：权限类型，负责存储权限和角色
+ * 权限类型，负责存储权限和角色
  *
- * @author huchenqiang
- * @date 2018/8/20 16:58
+ * @author zhaoxinguo on 2017/9/12.
  */
 public class GrantedAuthorityImpl implements GrantedAuthority {
 

@@ -1,5 +1,6 @@
 package com.example.repository;
 
+import com.example.entity.Teil;
 import com.example.entity.TeilSchedule;
 import com.example.entity.TeilTest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,8 @@ import java.util.Date;
  */
 public interface TeilTestRepository extends JpaRepository<TeilTest, Integer>, JpaSpecificationExecutor<TeilTest> {
     TeilTest findByIdAndDeleteTime(int id, Date deleteTime);
+
+    TeilTest findByTeilAndDeleteTime(Teil teil, Date deleteTime);
 
     @Transactional
     @Modifying

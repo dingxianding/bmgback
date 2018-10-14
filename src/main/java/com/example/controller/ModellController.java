@@ -7,6 +7,7 @@ import com.example.entity.Modell;
 import com.example.entity.Teil;
 import com.example.exception.BaseException;
 import com.example.repository.*;
+import com.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,8 +44,14 @@ public class ModellController {
     private FileRepository fileRepository;
 
     @GetMapping("/{id}")
-    public Modell get(@PathVariable int id) {
-        return repository.findByIdAndDeleteTime(id, null);
+    public ModellWithTeilDTO get(@PathVariable int id) {
+        ModellWithTeilDTO modellWithTeilDTO = new ModellWithTeilDTO();
+        Modell modell = repository.findByIdAndDeleteTime(id, null);
+        if (modell != null) {
+            modellWithTeilDTO.setModell(modell);
+            modellWithTeilDTO.setTeils(modell.getTeils());
+        }
+        return modellWithTeilDTO;
     }
 
     /**
@@ -123,6 +130,9 @@ public class ModellController {
      */
     @PostMapping("")
     public Modell save(@RequestBody ModellAddUpdateDTO addDTO) {
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
+
         Modell entity = new Modell();
         entity.setName(addDTO.getName());
 
@@ -152,8 +162,7 @@ public class ModellController {
         //是空的要置空
         entity.setRunPlan(fileEntitieList);
 
-        //TODO 用户管理完善
-        entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
+        entity.setInUser(userRepository.findByIdAndDeleteTime(currentUserID, null));
         return repository.save(entity);
     }
 

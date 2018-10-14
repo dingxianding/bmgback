@@ -3,6 +3,7 @@ package com.example.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -16,7 +17,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "tb_user",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"number"})})
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"number"}), @UniqueConstraint(columnNames = {"username"})})
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -36,11 +37,21 @@ public class User implements Serializable {
     @NotNull
     private String name;
 
+    //登录用户名
+    @Column(nullable = false, unique = true)
+    private String username;
+
     @NotNull
     private String password;
 
     @NotNull
     private Integer role;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
 
     /**
      * 录入人员
@@ -54,21 +65,25 @@ public class User implements Serializable {
 
     /**
      * 录入时间
-     * 时间必须在程序里写，不能默认生成
+     * 时间必须在程序里写，不能默认生成（用了CreationTimestamp，就不需要程序里写了）
      * 因为如果是非空的话就会因为是Null无法插入，如果可为空的话就会是null，时间只能自己写
      */
-    @Column(nullable = false, columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private Date inTime;
 
     /**
      * 更新时间
      */
+    @CreationTimestamp
+    @Column(nullable = false)
     private Date updateTime;
 
     /**
      * 删除时间，删除操作并不真实删除数据
      */
     @JsonIgnore
+    @Column(insertable = false)
     private Date deleteTime;
 
     public Integer getId() {
@@ -95,6 +110,14 @@ public class User implements Serializable {
         this.name = name;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -109,6 +132,14 @@ public class User implements Serializable {
 
     public void setRole(Integer role) {
         this.role = role;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public User getInUser() {

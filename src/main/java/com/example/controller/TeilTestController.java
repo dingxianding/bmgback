@@ -7,6 +7,7 @@ import com.example.entity.TeilSchedule;
 import com.example.entity.TeilTest;
 import com.example.exception.BaseException;
 import com.example.repository.*;
+import com.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -132,6 +133,8 @@ public class TeilTestController {
     @PostMapping("")
     public TeilTest save(@RequestBody TeilTestAddUpdateDTO addDTO) {
         //TODO 权限控制
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
 
         TeilTest entity = new TeilTest();
         entity.setTeil(teilRepository.findByNumberAndDeleteTime(addDTO.getTeil(), null));
@@ -184,8 +187,7 @@ public class TeilTestController {
         entity.setRemark(addDTO.getRemark());
         entity.setIfCop(addDTO.getIfCop());
 
-        //TODO 用户管理完善
-        entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
+        entity.setInUser(userRepository.findByIdAndDeleteTime(currentUserID, null));
         return repository.save(entity);
     }
 

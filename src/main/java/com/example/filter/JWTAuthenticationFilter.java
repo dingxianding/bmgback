@@ -2,11 +2,13 @@ package com.example.filter;
 
 import com.example.constant.ConstantKey;
 import com.example.exception.TokenException;
+import com.example.service.GrantedAuthorityImpl;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -15,6 +17,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * 描述：token的校验
@@ -37,7 +40,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String header = request.getHeader("Authorization");
         //白名单URL即使带token也不管
-        if (header == null || !header.startsWith("Bearer ") || request.getRequestURL().toString().contains("/public") || request.getRequestURL().toString().contains("/helper")) {
+        if (header == null || !header.startsWith("Bearer ") || request.getRequestURL().toString().contains("/users/login")) {
             chain.doFilter(request, response);
             return;
         }
@@ -47,14 +50,17 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
+        long start = System.currentTimeMillis();
         String token = request.getHeader("Authorization");
-        if (token == null || token.isEmpty()) {
-            throw new TokenException("Token为空");
-        }
+        //前面已经判断，token一定非空
+//        if (token == null || token.isEmpty()) {
+//            throw new TokenEmptyException("Token为空");
+//        }
         // parse the token.
         try {
             String user = null;
             int role = 0;
+            //TODO 没有好的办法获取配置文件内容，将jwtGenerator注入或者实例化都不行
             Claims claims = Jwts.parser()
                     .setSigningKey(ConstantKey.SIGNING_KEY)
                     .parseClaimsJws(token.replace("Bearer ", ""))
@@ -66,6 +72,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                 //userID放到username中，userRole放到password中
                 return new UsernamePasswordAuthenticationToken(user, role, null);
             }
+
         } catch (ExpiredJwtException e) {
             logger.error("Token已过期: {} " + e);
             throw new TokenException("Token已过期");
@@ -82,6 +89,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
             logger.error("非法参数异常: {} " + e);
             throw new TokenException("非法参数异常");
         }
+
         return null;
     }
 

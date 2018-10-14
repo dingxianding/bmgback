@@ -17,6 +17,8 @@ import java.util.Date;
 public interface TeilScheduleRepository extends JpaRepository<TeilSchedule, Integer>, JpaSpecificationExecutor<TeilSchedule> {
     TeilSchedule findByIdAndDeleteTime(int id, Date deleteTime);
 
+    TeilSchedule findByTeilAndDeleteTime(Teil teil,Date deleteTime);
+
     @Transactional
     @Modifying
     @Query("update TeilSchedule tb set tb.deleteTime = now() where tb.id =:id")

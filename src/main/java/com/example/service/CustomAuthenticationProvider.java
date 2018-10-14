@@ -5,16 +5,18 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.ArrayList;
+
 /**
- * 描述：自定义身份认证验证组件
+ * 自定义身份认证验证组件
  *
- * @author huchenqiang
- * @date 2018/8/20 16:58
+ * @author zhaoxinguo on 2017/9/12.
  */
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
@@ -22,7 +24,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public CustomAuthenticationProvider(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public CustomAuthenticationProvider(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder){
         this.userDetailsService = userDetailsService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
@@ -36,8 +38,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         UserDetails userDetails = userDetailsService.loadUserByUsername(name);
         if (null != userDetails) {
             if (bCryptPasswordEncoder.matches(password, userDetails.getPassword())) {
+                // 这里设置权限和角色
+                ArrayList<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add( new GrantedAuthorityImpl("ROLE_ADMIN"));
+                authorities.add( new GrantedAuthorityImpl("AUTH_WRITE"));
                 // 生成令牌 这里令牌里面存入了:name,password,authorities, 当然你也可以放其他内容
-                Authentication auth = new UsernamePasswordAuthenticationToken(name, password, userDetails.getAuthorities());
+                Authentication auth = new UsernamePasswordAuthenticationToken(name, password, authorities);
                 return auth;
             } else {
                 throw new BadCredentialsException("密码错误");
@@ -49,7 +55,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     /**
      * 是否可以提供输入类型的认证服务
-     *
      * @param authentication
      * @return
      */

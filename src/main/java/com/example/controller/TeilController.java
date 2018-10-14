@@ -1,9 +1,11 @@
 package com.example.controller;
 
+import com.example.constant.RoleEnum;
 import com.example.dto.*;
 import com.example.entity.*;
 import com.example.exception.BaseException;
 import com.example.repository.*;
+import com.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.AttributeOverride;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -47,17 +50,43 @@ public class TeilController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TeilScheduleRepository teilScheduleRepository;
+
+    @Autowired
+    private TeilTestRepository teilTestRepository;
+
     @GetMapping("")
     public List<Teil> getAll() {
         return repository.findAll();
     }
 
     @GetMapping("/{id}")
-    public Teil get(@PathVariable int id) {
-        return repository.findByIdAndDeleteTime(id, null);
+    public TeilFullInfoDTO get(@PathVariable int id) {
+        TeilFullInfoDTO teilFullInfoDTO = new TeilFullInfoDTO();
+        Teil teil = repository.findByIdAndDeleteTime(id, null);
+        if (teil != null) {
+            teilFullInfoDTO.setTeil(teil);
+            TeilSchedule teilSchedule = teilScheduleRepository.findByTeilAndDeleteTime(teil, null);
+            if (teilSchedule == null) {
+                //一定要设置一个，不然返回为空，前端不好处理
+                teilSchedule = new TeilSchedule();
+                teilSchedule.setTeil(teil);
+            }
+            teilFullInfoDTO.setTeilSchedule(teilSchedule);
+            TeilTest teilTest = teilTestRepository.findByTeilAndDeleteTime(teil, null);
+            if (teilTest == null) {
+                teilTest = new TeilTest();
+                teilTest.setTeil(teil);
+            }
+            teilFullInfoDTO.setTeilTest(teilTest);
+        }
+
+        return teilFullInfoDTO;
     }
 
     /**
+     * 只获取自己的零件
      * 获取分页的数据，带查询条件、排序、分页
      *
      * @param params
@@ -65,6 +94,88 @@ public class TeilController {
      */
     @GetMapping("pagedList")
     public PageResultDTO pagedList(TeilPageQueryDTO params) {
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
+
+        // 动态查询条件
+        Specification<Teil> spec = (root, query, cb) -> {
+            List<Predicate> predicate = new ArrayList<>();
+
+            if (params.getNumber() != null) {
+                predicate.add(cb.like(cb.lower(root.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+            }
+            if (params.getName() != null) {
+                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
+            }
+            if (params.getStatus() != null) {
+                predicate.add(cb.equal(root.get("status"), params.getStatus()));
+            }
+            //适用车型
+            if (params.getModell() != null) {
+                Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("name"), params.getModell()));
+            }
+            //适用动力总成
+            if (params.getAggregate() != null) {
+                Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("name"), params.getAggregate()));
+            }
+            //fop
+            //TODO 人员实体修改后可能要修改
+            if (params.getFop() != null) {
+                Join<Aggregate, Teil> join = root.join("fop", JoinType.LEFT);
+                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
+            }
+            predicate.add(cb.isNull(root.get("deleteTime")));
+
+            Predicate[] pre = new Predicate[predicate.size()];
+            query.where(predicate.toArray(pre));
+
+            return null;
+        };
+        if (params.getCurrentPage() == 0) {
+            params.setCurrentPage(1);
+        }
+        if (params.getPageSize() == 0) {
+            params.setPageSize(10);
+        }
+        Sort sort = new Sort(Sort.Direction.DESC, "id");
+        if (params.getSorter() != null) {
+            String sorter = params.getSorter();
+            String sortCol = sorter.substring(0, sorter.lastIndexOf("_"));
+            String sortDirection = sorter.substring(sorter.lastIndexOf("_") + 1);
+            if (sortDirection.equals("descend")) {
+                sort = new Sort(Sort.Direction.DESC, sortCol);
+            } else {
+                sort = new Sort(Sort.Direction.ASC, sortCol);
+            }
+        }
+        Pageable pageable = new PageRequest(params.getCurrentPage() - 1, params.getPageSize(), sort);
+        Page<Teil> pageResult = repository.findAll(spec, pageable);
+
+        PageResultDTO pageResultDTO = new PageResultDTO();
+        pageResultDTO.setList(pageResult.getContent());
+
+        Pagination pagination = new Pagination();
+        pagination.setTotal((int) pageResult.getTotalElements());
+        pagination.setCurrent(params.getCurrentPage());
+        pagination.setPageSize(params.getPageSize());
+        pageResultDTO.setPagination(pagination);
+
+        // 返回分页数据
+        return pageResultDTO;
+    }
+
+    /**
+     * 获取所有人的零件
+     *
+     * @param params
+     * @return
+     */
+    @GetMapping("allPagedList")
+    public PageResultDTO allPagedList(TeilPageQueryDTO params) {
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
         Specification<Teil> spec = (root, query, cb) -> {
@@ -144,6 +255,8 @@ public class TeilController {
     @PostMapping("")
     public Teil save(@RequestBody TeilAddDTO addDTO) {
         //TODO 权限控制
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
 
         Teil entity = new Teil();
         entity.setNumber(addDTO.getNumber());
@@ -168,9 +281,8 @@ public class TeilController {
         }
 
         entity.setAggregates(aggregates);
-        //TODO 用户管理完善
-        entity.setInUser(userRepository.findByIdAndDeleteTime(1, null));
-        entity.setFop(userRepository.findByIdAndDeleteTime(1, null));
+        entity.setInUser(userRepository.findByIdAndDeleteTime(currentUserID, null));
+        entity.setFop(userRepository.findByIdAndDeleteTime(currentUserID, null));
 
         return repository.save(entity);
     }
