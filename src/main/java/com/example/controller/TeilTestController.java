@@ -27,7 +27,7 @@ import java.util.List;
  * 零件实验
  */
 @RestController
-@RequestMapping("teiltest")
+@RequestMapping("myapi/teiltest")
 public class TeilTestController {
 
     @Autowired

@@ -26,7 +26,7 @@ import java.util.List;
  * 车型
  */
 @RestController
-@RequestMapping("modell")
+@RequestMapping("myapi/modell")
 public class ModellController {
     @Autowired
     private ModellRepository repository;

@@ -27,7 +27,7 @@ import java.util.List;
  * 零件进度
  */
 @RestController
-@RequestMapping("teilschedule")
+@RequestMapping("myapi/teilschedule")
 public class TeilScheduleController {
 
     @Autowired

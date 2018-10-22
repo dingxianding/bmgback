@@ -32,7 +32,7 @@ import java.util.List;
  * https://blog.csdn.net/walkerJong/article/details/7946109
  */
 @RestController
-@RequestMapping("teil")
+@RequestMapping("myapi/teil")
 public class TeilController {
 
     @Autowired

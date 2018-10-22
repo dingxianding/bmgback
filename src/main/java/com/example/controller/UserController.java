@@ -41,7 +41,7 @@ import java.util.*;
  * 人员控制器
  */
 @RestController
-@RequestMapping("users")
+@RequestMapping("myapi/users")
 public class UserController {
 
     @Autowired

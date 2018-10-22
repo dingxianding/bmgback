@@ -5,6 +5,7 @@ import com.example.repository.FileRepository;
 import com.example.repository.MemberRepository;
 import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -31,14 +32,16 @@ public class FileController {
     @Autowired
     private UserRepository userRepository;
 
+    @Value("${app.fildUploadDir}")
+    private String webDir;
+
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     //文件上传相关代码
     //MultipartFile file这个变量名与前端相同
-    @RequestMapping(value = "upload")
+    @RequestMapping(value = "myapi/upload")
     @ResponseBody
     public Map upload(@RequestParam("file") MultipartFile file) {
-        String webDir = "D://IdeaProject//bgmsys//";
         Map result = new HashMap();
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");// 设置日期格式
         String dateDir = df.format(new Date());// new Date()为获取当前系统时间
@@ -87,7 +90,7 @@ public class FileController {
     }
 
     //文件下载相关代码
-    @GetMapping("/download/{id}")
+    @GetMapping("/myapi/download/{id}")
     public String downloadFile(@PathVariable Integer id, HttpServletResponse response) throws FileNotFoundException, UnsupportedEncodingException {
         FileEntity fileEntity = repository.findByIdAndDeleteTime(id, null);
         if (fileEntity != null) {

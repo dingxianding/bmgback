@@ -33,7 +33,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * 需要放行的URL
      */
     private static final String[] AUTH_WHITELIST = {
-            "/**",
+            "/",
+            "/**/*.html",
+            "/**/*.css",
+            "/**/*.js",
+            "/**/*.jpg",
+            "/**/*.png",
+            "/**/*.svg",    // 图片
+            "/**/*.eot",
+            "/**/*.ttf",
+            "/**/*.woff",
+            "/myapi/users/login",
+            "/myapi/upload/",
+            "/myapi/download/**",
             // -- swagger ui
             "/v2/api-docs",
             "/swagger-resources",

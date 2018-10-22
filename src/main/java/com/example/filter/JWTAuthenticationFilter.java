@@ -40,7 +40,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String header = request.getHeader("Authorization");
         //白名单URL即使带token也不管
-        if (header == null || !header.startsWith("Bearer ") || request.getRequestURL().toString().contains("/users/login")) {
+        if (header == null || !header.startsWith("Bearer ") || request.getRequestURL().toString().contains("/myapi/users/login") || request.getRequestURL().toString().contains("/myapi/upload") || request.getRequestURL().toString().contains("/myapi/download")) {
             chain.doFilter(request, response);
             return;
         }
