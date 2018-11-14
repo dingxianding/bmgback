@@ -121,11 +121,13 @@ public class TeilController {
                 predicate.add(cb.equal(join.get("name"), params.getAggregate()));
             }
             //fop
-            //TODO 人员实体修改后可能要修改
             if (params.getFop() != null) {
-                Join<Aggregate, Teil> join = root.join("fop", JoinType.LEFT);
+                Join<User, Teil> join = root.join("fop", JoinType.LEFT);
                 predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
             }
+            //只能查看自己的
+            Join<User, Teil> join = root.join("fop", JoinType.LEFT);
+            predicate.add(cb.equal(join.get("id"), currentUserID));
             predicate.add(cb.isNull(root.get("deleteTime")));
 
             Predicate[] pre = new Predicate[predicate.size()];
@@ -172,8 +174,8 @@ public class TeilController {
      * @param params
      * @return
      */
-    @GetMapping("allPagedList")
-    public PageResultDTO allPagedList(TeilPageQueryDTO params) {
+    @GetMapping("pagedListAll")
+    public PageResultDTO pagedListAll(TeilPageQueryDTO params) {
         int currentUserID = UserService.getCurrentUserID();
         int currentUserRole = UserService.getCurrentUserRole();
 
@@ -201,9 +203,8 @@ public class TeilController {
                 predicate.add(cb.equal(join.get("name"), params.getAggregate()));
             }
             //fop
-            //TODO 人员实体修改后可能要修改
             if (params.getFop() != null) {
-                Join<Aggregate, Teil> join = root.join("fop", JoinType.LEFT);
+                Join<User, Teil> join = root.join("fop", JoinType.LEFT);
                 predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
             }
             predicate.add(cb.isNull(root.get("deleteTime")));
@@ -353,6 +354,7 @@ public class TeilController {
      * 零件List界面的初始化数据
      * 在初始化的时候从数据库读取
      * 包括排放阶段、车型、动力总成以及分页的数据
+     * 只能查询自己的零件信息
      *
      * @return
      */
@@ -371,5 +373,28 @@ public class TeilController {
         return teilInitDataDTO;
     }
 
+
+    /**
+     * 零件List界面的初始化数据
+     * 在初始化的时候从数据库读取
+     * 包括排放阶段、车型、动力总成以及分页的数据
+     * 可以查询所有人的零件信息
+     *
+     * @return
+     */
+    @GetMapping("initAll")
+    public TeilInitDataDTO initAll(TeilPageQueryDTO params) {
+        TeilInitDataDTO teilInitDataDTO = new TeilInitDataDTO();
+        //排放阶段、车型、动力总成
+        teilInitDataDTO.setAbgasstufeList(abgasstufeRepository.findAll());
+        teilInitDataDTO.setModellList(modellRepository.findAll());
+        teilInitDataDTO.setAggregateList(aggregateRepository.findAll());
+        //分页数据
+        PageResultDTO pageResultDTO = new PageResultDTO();
+        pageResultDTO = pagedListAll(params);
+        teilInitDataDTO.setList(pageResultDTO.getList());
+        teilInitDataDTO.setPagination(pageResultDTO.getPagination());
+        return teilInitDataDTO;
+    }
 
 }

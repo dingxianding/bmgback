@@ -1,10 +1,7 @@
 package com.example.controller;
 
 import com.example.dto.*;
-import com.example.entity.FileEntity;
-import com.example.entity.Teil;
-import com.example.entity.TeilSchedule;
-import com.example.entity.TeilTest;
+import com.example.entity.*;
 import com.example.exception.BaseException;
 import com.example.repository.*;
 import com.example.service.UserService;
@@ -69,6 +66,8 @@ public class TeilTestController {
      */
     @GetMapping("pagedList")
     public PageResultDTO pagedList(TeilTestPageQueryDTO params) {
+        int currentUserID = UserService.getCurrentUserID();
+        int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
         Specification<TeilTest> spec = (root, query, cb) -> {
@@ -84,6 +83,10 @@ public class TeilTestController {
                 predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getName().toLowerCase() + "%"));
                 //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
             }
+            //只能查看自己的
+            Join<User, TeilTest> join = root.join("inUser", JoinType.LEFT);
+            predicate.add(cb.equal(join.get("id"), currentUserID));
+
             predicate.add(cb.isNull(root.get("deleteTime")));
 
             Predicate[] pre = new Predicate[predicate.size()];
