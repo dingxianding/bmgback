@@ -23,7 +23,7 @@ public class JwtGenerator {
     private String jwtExpirationInMs;
 
     public String generate(String subject, int role) {
-        Map<String, Object> roleMap = new HashMap<>();
+        Map<String, Object> roleMap = new HashMap();
         roleMap.put("role", role);
         return Jwts.builder()
                 .setClaims(roleMap)

@@ -39,7 +39,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (null != userDetails) {
             if (bCryptPasswordEncoder.matches(password, userDetails.getPassword())) {
                 // 这里设置权限和角色
-                ArrayList<GrantedAuthority> authorities = new ArrayList<>();
+                ArrayList<GrantedAuthority> authorities = new ArrayList();
                 authorities.add( new GrantedAuthorityImpl("ROLE_ADMIN"));
                 authorities.add( new GrantedAuthorityImpl("AUTH_WRITE"));
                 // 生成令牌 这里令牌里面存入了:name,password,authorities, 当然你也可以放其他内容

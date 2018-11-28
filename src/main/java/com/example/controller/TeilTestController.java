@@ -13,9 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -70,29 +68,32 @@ public class TeilTestController {
         int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
-        Specification<TeilTest> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<TeilTest> spec = new Specification<TeilTest>() {
+            @Override
+            public Predicate toPredicate(Root<TeilTest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getNumber() != null) {
-                Join<Teil, TeilTest> join = root.join("teil", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
-                //predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                if (params.getNumber() != null) {
+                    Join<Teil, TeilTest> join = root.join("teil", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                    //predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                }
+                if (params.getName() != null) {
+                    Join<Teil, TeilTest> join = root.join("teil", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                    //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+                }
+                //只能查看自己的
+                Join<User, TeilTest> join = root.join("inUser", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("id"), currentUserID));
+
+                predicate.add(cb.isNull(root.get("deleteTime")));
+
+                Predicate[] pre = new Predicate[predicate.size()];
+                query.where(predicate.toArray(pre));
+
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
             }
-            if (params.getName() != null) {
-                Join<Teil, TeilTest> join = root.join("teil", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getName().toLowerCase() + "%"));
-                //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
-            }
-            //只能查看自己的
-            Join<User, TeilTest> join = root.join("inUser", JoinType.LEFT);
-            predicate.add(cb.equal(join.get("id"), currentUserID));
-
-            predicate.add(cb.isNull(root.get("deleteTime")));
-
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
-
-            return null;
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);
@@ -145,7 +146,7 @@ public class TeilTestController {
         entity.setSizeIstTime(addDTO.getSizeIstTime());
         entity.setSizeTestIstTime(addDTO.getSizeTestIstTime());
         //尺寸实验报告
-        List<FileEntity> sizeTestReport = new ArrayList<>();
+        List<FileEntity> sizeTestReport = new ArrayList();
         if (addDTO.getSizeTestReport() != null && addDTO.getSizeTestReport().size() > 0) {
             for (Integer i : addDTO.getSizeTestReport()) {
                 sizeTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -157,7 +158,7 @@ public class TeilTestController {
         entity.setMaterialIstTime(addDTO.getMaterialIstTime());
         entity.setMaterialTestIstTime(addDTO.getMaterialTestIstTime());
         //材料实验报告
-        List<FileEntity> materialTestReport = new ArrayList<>();
+        List<FileEntity> materialTestReport = new ArrayList<FileEntity>();
         if (addDTO.getMaterialTestReport() != null && addDTO.getMaterialTestReport().size() > 0) {
             for (Integer i : addDTO.getMaterialTestReport()) {
                 materialTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -167,7 +168,7 @@ public class TeilTestController {
 
         entity.setSupplierTestIstTime(addDTO.getSupplierTestIstTime());
         //供应商自检实验报告
-        List<FileEntity> supplierTestReport = new ArrayList<>();
+        List<FileEntity> supplierTestReport = new ArrayList<FileEntity>();
         if (addDTO.getSupplierTestReport() != null && addDTO.getSupplierTestReport().size() > 0) {
             for (Integer i : addDTO.getSupplierTestReport()) {
                 supplierTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -178,7 +179,7 @@ public class TeilTestController {
         entity.setSendWobTime(addDTO.getSendWobTime());
         entity.setWobTestCompleteTime(addDTO.getWobTestCompleteTime());
         //WOB实验报告
-        List<FileEntity> wobTestReport = new ArrayList<>();
+        List<FileEntity> wobTestReport = new ArrayList<FileEntity>();
         if (addDTO.getWobTestReport() != null && addDTO.getWobTestReport().size() > 0) {
             for (Integer i : addDTO.getWobTestReport()) {
                 wobTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -234,7 +235,7 @@ public class TeilTestController {
         entity.setSizeIstTime(updateDTO.getSizeIstTime());
         entity.setSizeTestIstTime(updateDTO.getSizeTestIstTime());
         //尺寸实验报告
-        List<FileEntity> sizeTestReport = new ArrayList<>();
+        List<FileEntity> sizeTestReport = new ArrayList<FileEntity>();
         if (updateDTO.getSizeTestReport() != null && updateDTO.getSizeTestReport().size() > 0) {
             for (Integer i : updateDTO.getSizeTestReport()) {
                 sizeTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -246,7 +247,7 @@ public class TeilTestController {
         entity.setMaterialIstTime(updateDTO.getMaterialIstTime());
         entity.setMaterialTestIstTime(updateDTO.getMaterialTestIstTime());
         //材料实验报告
-        List<FileEntity> materialTestReport = new ArrayList<>();
+        List<FileEntity> materialTestReport = new ArrayList<FileEntity>();
         if (updateDTO.getMaterialTestReport() != null && updateDTO.getMaterialTestReport().size() > 0) {
             for (Integer i : updateDTO.getMaterialTestReport()) {
                 materialTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -256,7 +257,7 @@ public class TeilTestController {
 
         entity.setSupplierTestIstTime(updateDTO.getSupplierTestIstTime());
         //供应商自检实验报告
-        List<FileEntity> supplierTestReport = new ArrayList<>();
+        List<FileEntity> supplierTestReport = new ArrayList<FileEntity>();
         if (updateDTO.getSupplierTestReport() != null && updateDTO.getSupplierTestReport().size() > 0) {
             for (Integer i : updateDTO.getSupplierTestReport()) {
                 supplierTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -267,7 +268,7 @@ public class TeilTestController {
         entity.setSendWobTime(updateDTO.getSendWobTime());
         entity.setWobTestCompleteTime(updateDTO.getWobTestCompleteTime());
         //WOB实验报告
-        List<FileEntity> wobTestReport = new ArrayList<>();
+        List<FileEntity> wobTestReport = new ArrayList<FileEntity>();
         if (updateDTO.getWobTestReport() != null && updateDTO.getWobTestReport().size() > 0) {
             for (Integer i : updateDTO.getWobTestReport()) {
                 wobTestReport.add(fileRepository.findByIdAndDeleteTime(i, null));

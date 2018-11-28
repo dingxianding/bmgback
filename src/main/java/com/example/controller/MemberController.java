@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import java.util.Date;
+import java.util.Optional;
 
 import com.example.dto.ExecuteDTO;
 import com.example.dto.PageQueryParamDTO;
@@ -33,7 +34,8 @@ public class MemberController {
 
     @GetMapping("get/{id}")
     public Member get(@PathVariable String id) {
-        return repository.findOne(id);
+        Optional<Member> memberOptional = repository.findById(id);
+        return memberOptional.orElse(null);
     }
 
     @PostMapping("save")
@@ -68,7 +70,7 @@ public class MemberController {
 
     @GetMapping("remove/{id}")
     public ExecuteDTO remove(@PathVariable String id) {
-        repository.delete(id);
+        repository.deleteById(id);
         return new ExecuteDTO(true, "删除成功", id);
     }
 

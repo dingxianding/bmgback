@@ -1,20 +1,13 @@
 package com.example.controller;
 
-import com.example.constant.ConstantKey;
-import com.example.constant.RoleEnum;
 import com.example.dto.*;
-import com.example.entity.Aggregate;
-import com.example.entity.Modell;
-import com.example.entity.Teil;
+import com.example.entity.Member;
 import com.example.entity.User;
 import com.example.exception.BaseException;
 import com.example.repository.UserRepository;
 import com.example.service.UserService;
 import com.example.utils.JwtGenerator;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,12 +22,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.OutputStream;
 import java.util.*;
 
 /**
@@ -60,7 +50,8 @@ public class UserController {
 
     @GetMapping("get/{id}")
     public User get(@PathVariable int id) {
-        return repository.findOne(id);
+        Optional<User> userOptional = repository.findById(id);
+        return userOptional.orElse(null);
     }
 
     /**
@@ -73,24 +64,24 @@ public class UserController {
     public PageResultDTO pagedList(UserPageQueryDTO params) {
 
         // 动态查询条件
-        Specification<User> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<User> spec = new Specification<User>() {
+            @Override
+            public Predicate toPredicate(Root<User> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getNumber() != null) {
-                predicate.add(cb.like(cb.lower(root.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
-            }
-            if (params.getName() != null) {
-                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
-            }
-            if (params.getRole() != null) {
-                predicate.add(cb.equal(root.get("role"), params.getRole()));
-            }
-            predicate.add(cb.isNull(root.get("deleteTime")));
+                if (params.getNumber() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                }
+                if (params.getName() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                }
+                if (params.getRole() != null) {
+                    predicate.add(cb.equal(root.get("role"), params.getRole()));
+                }
+                predicate.add(cb.isNull(root.get("deleteTime")));
 
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
-
-            return null;
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
+            }
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);
@@ -98,6 +89,7 @@ public class UserController {
         if (params.getPageSize() == 0) {
             params.setPageSize(10);
         }
+
         Sort sort = new Sort(Sort.Direction.DESC, "id");
         if (params.getSorter() != null) {
             String sorter = params.getSorter();
@@ -109,6 +101,7 @@ public class UserController {
                 sort = new Sort(Sort.Direction.ASC, sortCol);
             }
         }
+
         Pageable pageable = new PageRequest(params.getCurrentPage() - 1, params.getPageSize(), sort);
         Page<User> pageResult = repository.findAll(spec, pageable);
 
@@ -215,7 +208,7 @@ public class UserController {
         }
         //返回用户信息+JWT
         String jwt = jwtGenerator.generate(user.getId().toString(), user.getRole());
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new HashMap();
         result.put("access_token", jwt);
         result.put("id", user.getId());
         result.put("role", user.getRole());
@@ -231,7 +224,7 @@ public class UserController {
     public List<String> getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<String>();
         for (GrantedAuthority grantedAuthority : authorities) {
             list.add(grantedAuthority.getAuthority());
         }
@@ -244,7 +237,7 @@ public class UserController {
 
         User entity = repository.findByIdAndDeleteTime(currentUserID, null);
         if (entity != null) {
-            Map<String, Object> result = new HashMap<>();
+            Map<String, Object> result = new HashMap();
             result.put("id", currentUserID);
             result.put("name", entity.getName());
 

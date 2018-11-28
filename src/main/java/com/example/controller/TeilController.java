@@ -15,9 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.AttributeOverride;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -98,42 +96,45 @@ public class TeilController {
         int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
-        Specification<Teil> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<Teil> spec = new Specification<Teil>() {
+            @Override
+            public Predicate toPredicate(Root<Teil> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getNumber() != null) {
-                predicate.add(cb.like(cb.lower(root.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
-            }
-            if (params.getName() != null) {
-                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
-            }
-            if (params.getStatus() != null) {
-                predicate.add(cb.equal(root.get("status"), params.getStatus()));
-            }
-            //适用车型
-            if (params.getModell() != null) {
-                Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
-                predicate.add(cb.equal(join.get("name"), params.getModell()));
-            }
-            //适用动力总成
-            if (params.getAggregate() != null) {
-                Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
-                predicate.add(cb.equal(join.get("name"), params.getAggregate()));
-            }
-            //fop
-            if (params.getFop() != null) {
+                if (params.getNumber() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                }
+                if (params.getName() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                }
+                if (params.getStatus() != null) {
+                    predicate.add(cb.equal(root.get("status"), params.getStatus()));
+                }
+                //适用车型
+                if (params.getModell() != null) {
+                    Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
+                    predicate.add(cb.equal(join.get("name"), params.getModell()));
+                }
+                //适用动力总成
+                if (params.getAggregate() != null) {
+                    Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
+                    predicate.add(cb.equal(join.get("name"), params.getAggregate()));
+                }
+                //fop
+                if (params.getFop() != null) {
+                    Join<User, Teil> join = root.join("fop", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("name")), "%" + params.getFop().toLowerCase() + "%"));
+                }
+                //只能查看自己的
                 Join<User, Teil> join = root.join("fop", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
+                predicate.add(cb.equal(join.get("id"), currentUserID));
+                predicate.add(cb.isNull(root.get("deleteTime")));
+
+                Predicate[] pre = new Predicate[predicate.size()];
+                query.where(predicate.toArray(pre));
+
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
             }
-            //只能查看自己的
-            Join<User, Teil> join = root.join("fop", JoinType.LEFT);
-            predicate.add(cb.equal(join.get("id"), currentUserID));
-            predicate.add(cb.isNull(root.get("deleteTime")));
-
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
-
-            return null;
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);
@@ -180,39 +181,42 @@ public class TeilController {
         int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
-        Specification<Teil> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<Teil> spec = new Specification<Teil>() {
+            @Override
+            public Predicate toPredicate(Root<Teil> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getNumber() != null) {
-                predicate.add(cb.like(cb.lower(root.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
-            }
-            if (params.getName() != null) {
-                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
-            }
-            if (params.getStatus() != null) {
-                predicate.add(cb.equal(root.get("status"), params.getStatus()));
-            }
-            //适用车型
-            if (params.getModell() != null) {
-                Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
-                predicate.add(cb.equal(join.get("name"), params.getModell()));
-            }
-            //适用动力总成
-            if (params.getAggregate() != null) {
-                Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
-                predicate.add(cb.equal(join.get("name"), params.getAggregate()));
-            }
-            //fop
-            if (params.getFop() != null) {
-                Join<User, Teil> join = root.join("fop", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getFop().toLowerCase() + "%"));
-            }
-            predicate.add(cb.isNull(root.get("deleteTime")));
+                if (params.getNumber() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                }
+                if (params.getName() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                }
+                if (params.getStatus() != null) {
+                    predicate.add(cb.equal(root.get("status"), params.getStatus()));
+                }
+                //适用车型
+                if (params.getModell() != null) {
+                    Join<Modell, Teil> join = root.join("modells", JoinType.LEFT);
+                    predicate.add(cb.equal(join.get("name"), params.getModell()));
+                }
+                //适用动力总成
+                if (params.getAggregate() != null) {
+                    Join<Aggregate, Teil> join = root.join("aggregates", JoinType.LEFT);
+                    predicate.add(cb.equal(join.get("name"), params.getAggregate()));
+                }
+                //fop
+                if (params.getFop() != null) {
+                    Join<User, Teil> join = root.join("fop", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("name")), "%" + params.getFop().toLowerCase() + "%"));
+                }
+                predicate.add(cb.isNull(root.get("deleteTime")));
 
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
+                Predicate[] pre = new Predicate[predicate.size()];
+                query.where(predicate.toArray(pre));
 
-            return null;
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
+            }
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);

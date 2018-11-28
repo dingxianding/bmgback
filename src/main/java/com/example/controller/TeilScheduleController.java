@@ -13,9 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -67,29 +65,32 @@ public class TeilScheduleController {
         int currentUserRole = UserService.getCurrentUserRole();
 
         // 动态查询条件
-        Specification<TeilSchedule> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<TeilSchedule> spec = new Specification<TeilSchedule>() {
+            @Override
+            public Predicate toPredicate(Root<TeilSchedule> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getNumber() != null) {
-                Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("number")), "%" + params.getNumber().toLowerCase() + "%"));
-                //predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                if (params.getNumber() != null) {
+                    Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("number")), "%" + params.getNumber().toLowerCase() + "%"));
+                    //predicate.add(cb.like(root.get("number"), "%" + params.getNumber() + "%"));
+                }
+                if (params.getName() != null) {
+                    Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
+                    predicate.add(cb.like(cb.lower(join.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                    //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
+                }
+                //只能查看自己的
+                Join<User, TeilSchedule> join = root.join("inUser", JoinType.LEFT);
+                predicate.add(cb.equal(join.get("id"), currentUserID));
+
+                predicate.add(cb.isNull(root.get("deleteTime")));
+
+                Predicate[] pre = new Predicate[predicate.size()];
+                query.where(predicate.toArray(pre));
+
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
             }
-            if (params.getName() != null) {
-                Join<Teil, TeilSchedule> join = root.join("teil", JoinType.LEFT);
-                predicate.add(cb.like(cb.lower(join.get("name")), "%" + params.getName().toLowerCase() + "%"));
-                //predicate.add(cb.like(root.get("name"), "%" + params.getName() + "%"));
-            }
-            //只能查看自己的
-            Join<User, TeilSchedule> join = root.join("inUser", JoinType.LEFT);
-            predicate.add(cb.equal(join.get("id"), currentUserID));
-
-            predicate.add(cb.isNull(root.get("deleteTime")));
-
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
-
-            return null;
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);

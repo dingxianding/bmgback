@@ -1,10 +1,7 @@
 package com.example.controller;
 
 import com.example.dto.*;
-import com.example.entity.Aggregate;
-import com.example.entity.FileEntity;
-import com.example.entity.Modell;
-import com.example.entity.Teil;
+import com.example.entity.*;
 import com.example.exception.BaseException;
 import com.example.repository.*;
 import com.example.service.UserService;
@@ -16,8 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -64,30 +60,29 @@ public class ModellController {
     public PageResultDTO pagedList(ModellPageQueryDTO params) {
 
         // 动态查询条件
-        Specification<Modell> spec = (root, query, cb) -> {
-            List<Predicate> predicate = new ArrayList<>();
+        Specification<Modell> spec = new Specification<Modell>() {
+            public Predicate toPredicate(Root<Modell> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
 
-            if (params.getName() != null) {
-                predicate.add(cb.like(cb.lower(root.get("name")), "%" + params.getName().toLowerCase() + "%"));
-            }
-            if (params.getPlatform() != null) {
-                predicate.add(cb.equal(root.get("platform"), platformRepository.findByName(params.getPlatform())));
-            }
-            if (params.getAggregates().size() > 0) {
-                //TODO 关联查询，直接查询会出错
+                if (params.getName() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                }
+                if (params.getPlatform() != null) {
+                    predicate.add(cb.equal(root.get("platform"), platformRepository.findByName(params.getPlatform())));
+                }
+                if (params.getAggregates().size() > 0) {
+                    //TODO 关联查询，直接查询会出错
 //                List<Aggregate> aggregates = new ArrayList<Aggregate>();
 //                for (String i : params.getAggregates()) {
 //                    aggregates.add(aggregateRepository.findByName(i));
 //                }
 //                Expression<String> exp = root.get("aggregates");
 //                predicate.add(exp.in(aggregates));
+                }
+                predicate.add(cb.isNull(root.get("deleteTime")));
+
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
             }
-            predicate.add(cb.isNull(root.get("deleteTime")));
-
-            Predicate[] pre = new Predicate[predicate.size()];
-            query.where(predicate.toArray(pre));
-
-            return null;
         };
         if (params.getCurrentPage() == 0) {
             params.setCurrentPage(1);
@@ -122,6 +117,35 @@ public class ModellController {
         return pageResultDTO;
     }
 
+
+    private Specification<Modell> getCondition(ModellPageQueryDTO params) {
+        Specification<Modell> spec = new Specification<Modell>() {
+            public Predicate toPredicate(Root<Modell> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicate = new ArrayList<Predicate>();
+
+                if (params.getName() != null) {
+                    predicate.add(cb.like(cb.lower(root.<String>get("name")), "%" + params.getName().toLowerCase() + "%"));
+                }
+                if (params.getPlatform() != null) {
+                    predicate.add(cb.equal(root.get("platform"), platformRepository.findByName(params.getPlatform())));
+                }
+                if (params.getAggregates().size() > 0) {
+                    //TODO 关联查询，直接查询会出错
+//                List<Aggregate> aggregates = new ArrayList<Aggregate>();
+//                for (String i : params.getAggregates()) {
+//                    aggregates.add(aggregateRepository.findByName(i));
+//                }
+//                Expression<String> exp = root.get("aggregates");
+//                predicate.add(exp.in(aggregates));
+                }
+                predicate.add(cb.isNull(root.get("deleteTime")));
+
+                return query.where(predicate.toArray(new Predicate[predicate.size()])).getRestriction();
+            }
+        };
+        return spec;
+    }
+
     /**
      * 添加
      *
@@ -153,7 +177,7 @@ public class ModellController {
         entity.setDescription(addDTO.getDescription());
 
         //跑车计划，文件
-        List<FileEntity> fileEntitieList = new ArrayList<>();
+        List<FileEntity> fileEntitieList = new ArrayList();
         if (addDTO.getRunPlan() != null && addDTO.getRunPlan().size() > 0) {
             for (Integer i : addDTO.getRunPlan()) {
                 fileEntitieList.add(fileRepository.findByIdAndDeleteTime(i, null));
@@ -219,7 +243,7 @@ public class ModellController {
         entity.setDescription(updateDTO.getDescription());
 
         //跑车计划，文件
-        List<FileEntity> fileEntitieList = new ArrayList<>();
+        List<FileEntity> fileEntitieList = new ArrayList();
         if (updateDTO.getRunPlan() != null && updateDTO.getRunPlan().size() > 0) {
             for (Integer i : updateDTO.getRunPlan()) {
                 fileEntitieList.add(fileRepository.findByIdAndDeleteTime(i, null));
